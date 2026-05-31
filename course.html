@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Template</title>
+<style>
+  /* ─── POPULATE: update --accent colours to match your course branding ─── */
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3347;
+    --accent: #6c63ff; --accent2: #00d4aa; --accent3: #ff6b6b; --accent4: #ffd93d;
+    --text: #e8eaf0; --muted: #8b90a8; --success: #4caf7d; --warning: #f0a500; --danger: #ff4757;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  /* SIDEBAR */
+  #sidebar { width: 260px; min-width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+  .sidebar-header { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h2 { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .sidebar-header p { font-size: 11px; color: var(--muted); }
+  .progress-bar-wrap { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+  .nav-section { padding: 8px 0; }
+  .nav-section-label { padding: 8px 16px 4px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; font-size: 13px; color: var(--muted); border-left: 3px solid transparent; transition: all 0.15s; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { border-left-color: var(--accent); background: rgba(108,99,255,0.1); color: var(--text); font-weight: 600; }
+  .nav-item.completed { color: var(--success); }
+  .nav-item.completed .nav-check { opacity: 1; }
+  .nav-check { width: 16px; height: 16px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center; font-size: 9px; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; margin-left: auto; }
+  .nav-num { width: 20px; height: 20px; border-radius: 4px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+  /* MAIN */
+  #main { margin-left: 260px; flex: 1; min-height: 100vh; }
+  .section-page { display: none; max-width: 860px; padding: 40px 48px; }
+  .section-page.active { display: block; }
+  .section-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); border-radius: 6px; padding: 4px 12px; font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  .section-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; line-height: 1.2; }
+  .section-subtitle { font-size: 16px; color: var(--muted); margin-bottom: 32px; font-style: italic; }
+
+  /* LECTURE */
+  .lecture { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+  .lecture-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .lecture-header:hover { background: var(--surface2); }
+  .lecture-num { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #4c44cc); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+  .lecture-meta { flex: 1; }
+  .lecture-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .lecture-time { font-size: 11px; color: var(--muted); }
+  .lecture-chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+  .lecture.open .lecture-chevron { transform: rotate(180deg); }
+  .lecture-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border); }
+  .lecture.open .lecture-body { display: block; }
+
+  /* CONTENT HELPERS */
+  .callout { border-left: 3px solid var(--accent); background: rgba(108,99,255,0.08); border-radius: 0 8px 8px 0; padding: 14px 16px; margin: 16px 0; font-style: italic; font-size: 14px; }
+  .callout.success { border-left-color: var(--success); background: rgba(76,175,125,0.08); }
+  .callout.warning { border-left-color: var(--warning); background: rgba(240,165,0,0.08); }
+  .callout.danger { border-left-color: var(--danger); background: rgba(255,71,87,0.08); }
+  .tip { display: flex; gap: 12px; background: var(--surface2); border-radius: 8px; padding: 14px 16px; margin: 16px 0; font-size: 13px; }
+  .tip-icon { font-size: 18px; flex-shrink: 0; }
+  .data-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  .data-table th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .badge-success { background: rgba(76,175,125,0.2); color: var(--success); }
+  .badge-danger  { background: rgba(255,71,87,0.2);  color: var(--danger); }
+  .badge-warning { background: rgba(240,165,0,0.2);  color: var(--warning); }
+  .badge-accent  { background: rgba(108,99,255,0.2); color: var(--accent); }
+  h3 { font-size: 16px; font-weight: 700; margin: 20px 0 10px; color: var(--accent2); }
+  h4 { font-size: 14px; font-weight: 700; margin: 16px 0 8px; }
+  p  { margin: 10px 0; }
+  ul, ol { padding-left: 20px; margin: 10px 0; }
+  li { margin: 6px 0; font-size: 14px; }
+  code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; color: var(--accent2); }
+  pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-family: monospace; font-size: 12px; color: var(--accent2); margin: 16px 0; line-height: 1.8; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .highlight { color: var(--accent2); font-weight: 700; }
+  .red { color: var(--danger); font-weight: 700; }
+  .gold { color: var(--accent4); font-weight: 700; }
+
+  /* FLASHCARDS */
+  .flashcard { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; overflow: hidden; transition: border-color 0.2s; margin-bottom: 12px; }
+  .flashcard:hover { border-color: var(--accent); }
+  .flashcard-q { padding: 14px 16px; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .flashcard-q .reveal-hint { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .flashcard-a { display: none; padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--accent2); font-weight: 700; background: rgba(0,212,170,0.05); }
+  .flashcard.revealed .flashcard-a { display: block; }
+  .flashcard.revealed { border-color: var(--accent2); }
+
+  /* QUIZ */
+  .quiz-section { background: var(--surface); border: 1px solid rgba(108,99,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 28px 0 0; }
+  .quiz-title { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 18px; }
+  .quiz-q { font-size: 14px; font-weight: 600; margin: 0 0 10px; color: var(--text); line-height: 1.4; }
+  .quiz-options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+  .quiz-opt { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: left; color: var(--text); font-family: inherit; }
+  .quiz-opt:hover:not([disabled]) { border-color: var(--accent); background: rgba(108,99,255,0.1); }
+  .quiz-opt.correct  { border-color: var(--success) !important; background: rgba(76,175,125,0.15) !important; color: var(--success); font-weight: 700; }
+  .quiz-opt.wrong    { border-color: var(--danger)  !important; background: rgba(255,71,87,0.1)  !important; color: var(--danger); }
+  .quiz-opt[disabled] { cursor: default; }
+  .quiz-feedback { font-size: 12px; margin-top: 5px; min-height: 18px; }
+  .quiz-feedback.c { color: var(--success); }
+  .quiz-feedback.w { color: var(--danger); }
+  .quiz-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .quiz-score { margin-top: 18px; padding: 12px 16px; background: var(--surface2); border-radius: 8px; font-size: 13px; display: none; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+  .quiz-score.show { display: flex; }
+  .quiz-score-num { font-size: 22px; font-weight: 800; color: var(--accent2); }
+
+  /* Q&A ACCORDION */
+  .qa-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .qa-q { padding: 14px 16px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: var(--surface2); user-select: none; transition: background 0.15s; }
+  .qa-q:hover { background: var(--border); }
+  .qa-q .qa-chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+  .qa-item.open .qa-chevron { transform: rotate(180deg); }
+  .qa-a { display: none; padding: 16px; font-size: 13px; border-top: 1px solid var(--border); background: var(--surface); line-height: 1.7; }
+  .qa-item.open .qa-a { display: block; }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; padding: 0; margin: 16px 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border-radius: 8px; margin: 4px 0; cursor: pointer; transition: background 0.15s; font-size: 14px; }
+  .checklist li:hover { background: var(--surface2); }
+  .check-box { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 5px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-top: 1px; }
+  .checklist li.done .check-box { background: var(--success); border-color: var(--success); }
+  .checklist li.done .check-box::after { content: '✓'; font-size: 12px; color: white; font-weight: 700; }
+  .checklist li.done span { text-decoration: line-through; color: var(--muted); }
+
+  /* SCORECARD */
+  .scorecard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+  .score-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .score-metric { font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .score-result { font-size: 22px; font-weight: 800; color: var(--success); }
+  .score-target { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .score-status { font-size: 11px; font-weight: 700; color: var(--success); }
+
+  /* NAV BUTTONS */
+  .nav-buttons { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #5a52d5; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* WELCOME */
+  .welcome-hero { background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,170,0.08)); border: 1px solid rgba(108,99,255,0.3); border-radius: 16px; padding: 32px; margin-bottom: 32px; text-align: center; }
+  .welcome-hero h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+  .welcome-hero p { color: var(--muted); font-size: 15px; max-width: 560px; margin: 0 auto 20px; }
+  .course-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .start-btn { margin-top: 24px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: white; padding: 14px 32px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+  .start-btn:hover { opacity: 0.9; }
+
+  @media (max-width: 700px) { #sidebar { width: 220px; min-width: 220px; } #main { margin-left: 220px; } .section-page { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIDEBAR — built automatically from COURSE_DATA below
+═══════════════════════════════════════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sb-title">Course Title</h2>
+    <p id="sb-subtitle">Subtitle</p>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-label"><span>Progress</span><span id="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+  <div id="sidebar-nav"></div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN CONTENT — built automatically from COURSE_DATA below
+═══════════════════════════════════════════════════════════════ -->
+<main id="main"></main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ██████╗ ██████╗ ██╗   ██╗██████╗ ███████╗███████╗    ██████╗  █████╗ ████████╗ █████╗
+// ██╔════╝██╔═══██╗██║   ██║██╔══██╗██╔════╝██╔════╝    ██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗
+// ██║     ██║   ██║██║   ██║██████╔╝███████╗█████╗      ██║  ██║███████║   ██║   ███████║
+// ██║     ██║   ██║██║   ██║██╔══██╗╚════██║██╔══╝      ██║  ██║██╔══██║   ██║   ██╔══██║
+// ╚██████╗╚██████╔╝╚██████╔╝██║  ██║███████║███████╗    ██████╔╝██║  ██║   ██║   ██║  ██║
+//  ╚═════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
+//
+//  POPULATE THIS OBJECT — the engine renders everything from it automatically.
+//  See README.md for full field documentation and examples.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const COURSE_DATA = {
+
+  // ── Meta ────────────────────────────────────────────────────────────────────
+  title:    "Your Course Title",
+  subtitle: "Topic · Level · Year",
+  stats: [
+    { num: "0",  label: "Lessons" },
+    { num: "0h", label: "Study Time" },
+    { num: "0",  label: "Q&A Answers" },
+    { num: "0",  label: "Flashcards" }
+  ],
+  welcomeText: "Describe what this course covers and what the learner will be able to do by the end.",
+
+  // ── Sidebar sections (groups of pages) ─────────────────────────────────────
+  // Each entry becomes a labelled group in the sidebar.
+  // pages[] lists the page indices (0-based) that belong to that group.
+  // Page 0 is always the Welcome page — do not include it here.
+  sidebarSections: [
+    { label: "Section 1 — Topic Name", pages: [1, 2, 3] },
+    { label: "Section 2 — Topic Name", pages: [4, 5, 6] },
+    { label: "Section 3 — Topic Name", pages: [7, 8] },
+    { label: "Exam Prep",              pages: [9, 10] }
+    // Add more sections as needed
+  ],
+
+  // ── Pages ───────────────────────────────────────────────────────────────────
+  // Each object is one lesson page. Pages are rendered in array order.
+  // Page 0 is the Welcome page and is auto-generated from the meta fields above.
+  // Start your lesson pages from index 1.
+  //
+  // Fields:
+  //   nav      — short label shown in the sidebar
+  //   badge    — small tag shown above the page title (e.g. "Section 1 · Lecture 1")
+  //   title    — large page heading
+  //   subtitle — italic subheading below title
+  //   content  — HTML string for the lecture body (lectures, callouts, tables etc.)
+  //              Use the CSS helper classes: .callout .tip .data-table .badge-*
+  //   quiz     — array of question objects (can be empty [])
+  //              Each question: { q: "Question?", opts: ["A","B","C","D"], correct: 0 }
+  //              correct is the 0-based index of the right answer
+  pages: [
+    // ── Lesson 1 ──────────────────────────────────────────────────────────────
+    {
+      nav: "Lesson 1 Title",
+      badge: "Section 1 · Lecture 1",
+      title: "Lesson 1 Title",
+      subtitle: "What this lesson covers",
+      content: `
+        <div class="lecture open">
+          <div class="lecture-header" onclick="toggleLecture(this)">
+            <div class="lecture-num">1.1</div>
+            <div class="lecture-meta">
+              <div class="lecture-title">Lecture Title</div>
+              <div class="lecture-time">⏱ 5 min</div>
+            </div>
+            <div class="lecture-chevron">▼</div>
+          </div>
+          <div class="lecture-body">
+            <p>Replace this with your lecture content. Use standard HTML.</p>
+
+            <div class="callout">
+              Use .callout for key quotes or definitions. Add class "success", "warning", or "danger" for colour variants.
+            </div>
+
+            <h3>Sub-heading</h3>
+            <p>Use &lt;h3&gt; for sub-sections within a lecture.</p>
+
+            <div class="tip">
+              <div class="tip-icon">💡</div>
+              <div><strong>Tip:</strong> Use .tip for helpful hints or practice drills.</div>
+            </div>
+
+            <table class="data-table">
+              <thead><tr><th>Column A</th><th>Column B</th><th>Column C</th></tr></thead>
+              <tbody>
+                <tr><td>Row 1A</td><td>Row 1B</td><td>Row 1C</td></tr>
+                <tr><td>Row 2A</td><td>Row 2B</td><td>Row 2C</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Add more .lecture blocks for additional lectures on this page -->
+      `,
+      quiz: [
+        {
+          q: "Sample question for Lesson 1?",
+          opts: ["Option A", "Option B", "Option C", "Option D"],
+          correct: 0   // index of the correct option (0 = Option A)
+        },
+        {
+          q: "Second sample question?",
+          opts: ["Option A", "Option B", "Option C", "Option D"],
+          correct: 2
+        }
+      ]
+    },
+
+    // ── Lesson 2 ──────────────────────────────────────────────────────────────
+    {
+      nav: "Lesson 2 Title",
+      badge: "Section 1 · Lecture 2",
+      title: "Lesson 2 Title",
+      subtitle: "What this lesson covers",
+      content: `
+        <div class="lecture open">
+          <div class="lecture-header" onclick="toggleLecture(this)">
+            <div class="lecture-num">1.2</div>
+            <div class="lecture-meta">
+              <div class="lecture-title">Lecture Title</div>
+              <div class="lecture-time">⏱ 10 min</div>
+            </div>
+            <div class="lecture-chevron">▼</div>
+          </div>
+          <div class="lecture-body">
+            <p>Replace this with your lecture content.</p>
+          </div>
+        </div>
+      `,
+      quiz: []   // leave empty if no quiz for this lesson
+    },
+
+    // ── Lesson 3 ──────────────────────────────────────────────────────────────
+    {
+      nav: "Lesson 3 Title",
+      badge: "Section 1 · Lecture 3",
+      title: "Lesson 3 Title",
+      subtitle: "What this lesson covers",
+      content: `
+        <div class="lecture open">
+          <div class="lecture-header" onclick="toggleLecture(this)">
+            <div class="lecture-num">1.3</div>
+            <div class="lecture-meta">
+              <div class="lecture-title">Lecture Title</div>
+              <div class="lecture-time">⏱ 10 min</div>
+            </div>
+            <div class="lecture-chevron">▼</div>
+          </div>
+          <div class="lecture-body">
+            <p>Replace this with your lecture content.</p>
+          </div>
+        </div>
+      `,
+      quiz: []
+    },
+
+    // ── Add more lesson pages following the same pattern ──────────────────────
+    // Copy and paste a lesson block above, update the fields, and add it here.
+    // Remember to update sidebarSections.pages[] to include the new page index.
+
+  ], // end pages[]
+
+  // ── Flashcards ──────────────────────────────────────────────────────────────
+  // Click-to-reveal flashcards shown on the Flashcard Drill page.
+  // Add one object per card: { q: "Question", a: "Answer" }
+  flashcards: [
+    { q: "Sample question 1?",  a: "Sample answer 1" },
+    { q: "Sample question 2?",  a: "Sample answer 2" },
+    { q: "Sample question 3?",  a: "Sample answer 3" },
+    { q: "Sample question 4?",  a: "Sample answer 4" },
+    { q: "Sample question 5?",  a: "Sample answer 5" }
+  ],
+
+  // ── Q&A Accordion ────────────────────────────────────────────────────────────
+  // Expandable Q&A panel — ideal for exam prep or hard examiner questions.
+  // Add one object per item: { q: "Question", a: "Answer HTML" }
+  qa: [
+    {
+      q: "Hard question 1?",
+      a: "Scripted answer 1. Use <strong>bold</strong> for key phrases."
+    },
+    {
+      q: "Hard question 2?",
+      a: "Scripted answer 2."
+    },
+    {
+      q: "Hard question 3?",
+      a: "Scripted answer 3."
+    }
+  ],
+
+  // ── Final Checklist ──────────────────────────────────────────────────────────
+  // Clickable checklist items on the final readiness page.
+  checklist: [
+    "Checklist item 1",
+    "Checklist item 2",
+    "Checklist item 3",
+    "Checklist item 4",
+    "Checklist item 5"
+  ]
+
+}; // end COURSE_DATA
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ENGINE — do not edit below this line unless you know what you're doing
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Compute total pages: welcome (0) + lessons + flashcard page + Q&A page + checklist page
+const LESSON_COUNT   = COURSE_DATA.pages.length;
+const PAGE_FLASHCARD = LESSON_COUNT + 1;
+const PAGE_QA        = LESSON_COUNT + 2;
+const PAGE_CHECKLIST = LESSON_COUNT + 3;
+const TOTAL_PAGES    = LESSON_COUNT + 4; // welcome + lessons + flashcard + qa + checklist
+
+const completed = new Array(TOTAL_PAGES).fill(false);
+let currentPage = 0;
+
+// ── Sidebar ─────────────────────────────────────────────────────────────────
+document.getElementById('sb-title').textContent    = COURSE_DATA.title;
+document.getElementById('sb-subtitle').textContent = COURSE_DATA.subtitle;
+
+function buildSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+
+  // Welcome
+  const welcomeSection = document.createElement('div');
+  welcomeSection.className = 'nav-section';
+  welcomeSection.innerHTML = `
+    <div class="nav-section-label">Start Here</div>
+    <div class="nav-item active" onclick="goTo(0)" id="nav-0">
+      <div class="nav-num">★</div> Welcome
+      <div class="nav-check">✓</div>
+    </div>`;
+  nav.appendChild(welcomeSection);
+
+  // Lesson sections
+  COURSE_DATA.sidebarSections.forEach(section => {
+    const sec = document.createElement('div');
+    sec.className = 'nav-section';
+    let html = `<div class="nav-section-label">${section.label}</div>`;
+    section.pages.forEach(pageIdx => {
+      if (pageIdx < 1 || pageIdx > LESSON_COUNT) return;
+      const p = COURSE_DATA.pages[pageIdx - 1];
+      html += `
+        <div class="nav-item" onclick="goTo(${pageIdx})" id="nav-${pageIdx}">
+          <div class="nav-num">${pageIdx}</div> ${p.nav}
+          <div class="nav-check">✓</div>
+        </div>`;
+    });
+    sec.innerHTML = html;
+    nav.appendChild(sec);
+  });
+
+  // Exam Prep fixed pages
+  const examSection = document.createElement('div');
+  examSection.className = 'nav-section';
+  examSection.innerHTML = `
+    <div class="nav-section-label">Exam Prep</div>
+    <div class="nav-item" onclick="goTo(${PAGE_FLASHCARD})" id="nav-${PAGE_FLASHCARD}">
+      <div class="nav-num">🃏</div> Flashcard Drill
+      <div class="nav-check">✓</div>
+    </div>
+    <div class="nav-item" onclick="goTo(${PAGE_QA})" id="nav-${PAGE_QA}">
+      <div class="nav-num">❓</div> Q&amp;A Bank
+      <div class="nav-check">✓</div>
+    </div>
+    <div class="nav-item" onclick="goTo(${PAGE_CHECKLIST})" id="nav-${PAGE_CHECKLIST}">
+      <div class="nav-num">★</div> Final Checklist
+      <div class="nav-check">✓</div>
+    </div>`;
+  nav.appendChild(examSection);
+}
+
+// ── Pages ────────────────────────────────────────────────────────────────────
+function buildPages() {
+  const main = document.getElementById('main');
+
+  // Welcome page (index 0)
+  const statsHtml = COURSE_DATA.stats.map(s =>
+    `<div class="stat"><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`
+  ).join('');
+  main.innerHTML += `
+    <div class="section-page active" id="page-0">
+      <div class="welcome-hero">
+        <h1>${COURSE_DATA.title}</h1>
+        <p>${COURSE_DATA.welcomeText}</p>
+        <div class="course-stats">${statsHtml}</div>
+        <button class="start-btn" onclick="goTo(1)">Start Learning →</button>
+      </div>
+      <div class="tip">
+        <div class="tip-icon">🎯</div>
+        <div><strong>How to use this course:</strong> Work through each section in order. Lessons expand when you click them. Flashcards reveal on click. Mark sections complete using the Next button.</div>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" disabled>← Previous</button>
+        <button class="btn btn-primary" onclick="goTo(1)">Start Course →</button>
+      </div>
+    </div>`;
+
+  // Lesson pages
+  COURSE_DATA.pages.forEach((page, i) => {
+    const idx  = i + 1;
+    const prev = idx - 1;
+    const next = idx + 1;
+    const isLast = idx === LESSON_COUNT;
+    const nextBtn = isLast
+      ? `<button class="btn btn-primary" onclick="markAndGoTo(${idx}, ${PAGE_FLASHCARD})">Mark Complete & Next →</button>`
+      : `<button class="btn btn-primary" onclick="markAndGoTo(${idx}, ${next})">Mark Complete & Next →</button>`;
+
+    let quizHtml = '';
+    if (page.quiz && page.quiz.length > 0) {
+      quizHtml = buildQuizHtml(idx, page.quiz);
+    }
+
+    main.innerHTML += `
+      <div class="section-page" id="page-${idx}">
+        <div class="section-badge">${page.badge}</div>
+        <div class="section-title">${page.title}</div>
+        <div class="section-subtitle">${page.subtitle}</div>
+        ${page.content}
+        ${quizHtml}
+        <div class="nav-buttons">
+          <button class="btn btn-ghost" onclick="goTo(${prev})">← Previous</button>
+          ${nextBtn}
+        </div>
+      </div>`;
+  });
+
+  // Flashcard page
+  const flashHtml = COURSE_DATA.flashcards.map((fc, i) => `
+    <div class="flashcard" id="fc-${i}" onclick="revealFlashcard(${i})">
+      <div class="flashcard-q">
+        <span>${fc.q}</span>
+        <span class="reveal-hint" id="fc-hint-${i}">Click to reveal</span>
+      </div>
+      <div class="flashcard-a">${fc.a}</div>
+    </div>`).join('');
+
+  main.innerHTML += `
+    <div class="section-page" id="page-${PAGE_FLASHCARD}">
+      <div class="section-badge">Exam Prep</div>
+      <div class="section-title">Flashcard Drill</div>
+      <div class="section-subtitle">Click each card to reveal the answer</div>
+      <div class="tip">
+        <div class="tip-icon">🃏</div>
+        <div>Say the answer out loud before clicking. <span id="revealed-count">0</span> / <span id="total-count">${COURSE_DATA.flashcards.length}</span> revealed.</div>
+      </div>
+      ${flashHtml}
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" onclick="goTo(${LESSON_COUNT})">← Previous</button>
+        <button class="btn btn-primary" onclick="markAndGoTo(${PAGE_FLASHCARD}, ${PAGE_QA})">Mark Complete & Next →</button>
+      </div>
+    </div>`;
+
+  // Q&A page
+  const qaHtml = COURSE_DATA.qa.map((item, i) => `
+    <div class="qa-item" id="qa-${i}">
+      <div class="qa-q" onclick="toggleQA(this)">
+        <span>${item.q}</span>
+        <span class="qa-chevron">▼</span>
+      </div>
+      <div class="qa-a">${item.a}</div>
+    </div>`).join('');
+
+  main.innerHTML += `
+    <div class="section-page" id="page-${PAGE_QA}">
+      <div class="section-badge">Exam Prep</div>
+      <div class="section-title">Q&amp;A Bank</div>
+      <div class="section-subtitle">Hard questions with scripted answers</div>
+      ${qaHtml}
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" onclick="goTo(${PAGE_FLASHCARD})">← Previous</button>
+        <button class="btn btn-primary" onclick="markAndGoTo(${PAGE_QA}, ${PAGE_CHECKLIST})">Mark Complete & Next →</button>
+      </div>
+    </div>`;
+
+  // Checklist page
+  const clHtml = COURSE_DATA.checklist.map(item => `
+    <li onclick="toggleCheck(this)"><div class="check-box"></div><span>${item}</span></li>`
+  ).join('');
+
+  main.innerHTML += `
+    <div class="section-page" id="page-${PAGE_CHECKLIST}">
+      <div class="section-badge">Final Check</div>
+      <div class="section-title">Readiness Checklist</div>
+      <div class="section-subtitle">Tick everything before you're done</div>
+      <ul class="checklist" id="final-checklist">${clHtml}</ul>
+      <div id="checklist-summary" style="margin-top:16px;padding:14px 16px;background:var(--surface2);border-radius:8px;font-size:14px;display:none;">
+        <span id="checklist-done">0</span> / <span id="checklist-total">0</span> items complete
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" onclick="goTo(${PAGE_QA})">← Previous</button>
+        <button class="btn btn-primary" onclick="goTo(0)" style="background:linear-gradient(135deg,var(--success),var(--accent2));">Go to Start</button>
+      </div>
+    </div>`;
+}
+
+// ── Quiz builder ─────────────────────────────────────────────────────────────
+function buildQuizHtml(pageIdx, questions) {
+  let html = `<div class="quiz-section"><div class="quiz-title">📝 Section Quiz — Test Your Knowledge</div>`;
+  questions.forEach((q, qi) => {
+    const gid = `qg-${pageIdx}-${qi}`;
+    html += `<div class="quiz-q">Q${qi + 1}: ${q.q}</div>
+      <div class="quiz-options" id="${gid}">`;
+    q.opts.forEach((opt, oi) => {
+      const isC = (oi === q.correct).toString().toLowerCase();
+      html += `<button class="quiz-opt" data-correct="${isC}" onclick="answerQuiz(this,${oi === q.correct},'${gid}')">${opt}</button>`;
+    });
+    html += `<div class="quiz-feedback"></div></div>`;
+    if (qi < questions.length - 1) html += `<hr class="quiz-divider">`;
+  });
+  html += `<div class="quiz-score"><span>Score: <span class="quiz-score-num">0</span>/${questions.length}</span><span style="font-size:11px;color:var(--muted)">All questions answered</span></div></div>`;
+  return html;
+}
+
+// ── Interaction handlers ──────────────────────────────────────────────────────
+function toggleLecture(header) { header.parentElement.classList.toggle('open'); }
+function toggleQA(qEl) { qEl.parentElement.classList.toggle('open'); }
+function toggleCheck(li) { li.classList.toggle('done'); updateChecklistSummary(); }
+
+let flashRevealCount = 0;
+function revealFlashcard(i) {
+  const card = document.getElementById('fc-' + i);
+  if (!card.classList.contains('revealed')) {
+    card.classList.add('revealed');
+    document.getElementById('fc-hint-' + i).textContent = '✓ Revealed';
+    flashRevealCount++;
+    document.getElementById('revealed-count').textContent = flashRevealCount;
+  }
+}
+
+function answerQuiz(btn, correct, groupId) {
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.quiz-opt').forEach(o => o.setAttribute('disabled', true));
+  const fb = group.querySelector('.quiz-feedback');
+  if (correct) {
+    btn.classList.add('correct'); fb.textContent = '✓ Correct!'; fb.className = 'quiz-feedback c';
+  } else {
+    btn.classList.add('wrong'); fb.textContent = '✗ Incorrect'; fb.className = 'quiz-feedback w';
+    group.querySelectorAll('.quiz-opt').forEach(o => { if (o.dataset.correct === 'true') o.classList.add('correct'); });
+  }
+  const quiz = group.closest('.quiz-section');
+  const allGroups = quiz.querySelectorAll('.quiz-options');
+  const answered  = [...allGroups].filter(g => g.querySelector('[disabled]')).length;
+  if (answered === allGroups.length) {
+    const scoreEl = quiz.querySelector('.quiz-score');
+    const n = quiz.querySelectorAll('.quiz-opt.correct[disabled]').length;
+    scoreEl.querySelector('.quiz-score-num').textContent = n + '/' + allGroups.length;
+    scoreEl.classList.add('show');
+  }
+}
+
+function updateChecklistSummary() {
+  const items = document.querySelectorAll('#final-checklist li');
+  const done  = document.querySelectorAll('#final-checklist li.done').length;
+  const s = document.getElementById('checklist-summary');
+  s.style.display = 'block';
+  document.getElementById('checklist-done').textContent  = done;
+  document.getElementById('checklist-total').textContent = items.length;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goTo(pageIndex) {
+  document.querySelectorAll('.section-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pageIndex).classList.add('active');
+  const navEl = document.getElementById('nav-' + pageIndex);
+  if (navEl) navEl.classList.add('active');
+  currentPage = pageIndex;
+  window.scrollTo(0, 0);
+  updateProgress();
+}
+
+function markAndGoTo(current, next) {
+  completed[current] = true;
+  const navItem = document.getElementById('nav-' + current);
+  if (navItem) navItem.classList.add('completed');
+  updateProgress();
+  goTo(next);
+}
+
+function updateProgress() {
+  const count = completed.filter(Boolean).length;
+  const pct   = Math.round((count / (TOTAL_PAGES - 1)) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent  = pct + '%';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildSidebar();
+buildPages();
+updateChecklistSummary();
+document.getElementById('nav-0').classList.add('active');
+</script>
+</body>
+</html>
