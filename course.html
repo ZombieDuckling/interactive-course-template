@@ -209,14 +209,12 @@ const COURSE_DATA = {
 
   // ── Sidebar sections (groups of pages) ─────────────────────────────────────
   // Each entry becomes a labelled group in the sidebar.
-  // pages[] lists the page indices (0-based) that belong to that group.
-  // Page 0 is always the Welcome page — do not include it here.
+  // pages[] lists 1-based lesson page indices that belong to that group.
+  // Page 0 is always the generated Welcome page — do not include it here.
+  // Exam Prep pages are added automatically after the lesson pages.
   sidebarSections: [
-    { label: "Section 1 — Topic Name", pages: [1, 2, 3] },
-    { label: "Section 2 — Topic Name", pages: [4, 5, 6] },
-    { label: "Section 3 — Topic Name", pages: [7, 8] },
-    { label: "Exam Prep",              pages: [9, 10] }
-    // Add more sections as needed
+    { label: "Section 1 — Topic Name", pages: [1, 2, 3] }
+    // Add more sections as needed after you add matching lesson pages.
   ],
 
   // ── Pages ───────────────────────────────────────────────────────────────────

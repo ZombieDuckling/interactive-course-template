@@ -206,11 +206,25 @@ Change the CSS custom properties at the top of `<style>` to match your branding:
 ## File Structure
 
 ```
-course.html    — the entire application (single file, no dependencies)
-README.md      — this file
+course.html                — the entire application (single file, no dependencies)
+scripts/validate_course.js — smoke-checks the HTML shell and COURSE_DATA object
+.github/workflows/         — PR validation workflow
+README.md                  — this file
 ```
 
 No build step. No npm. No server. Just open `course.html` in a browser.
+
+---
+
+## Validation
+
+Run the lightweight smoke validator before opening a PR:
+
+```bash
+node scripts/validate_course.js
+```
+
+The validator uses only Node.js built-ins. It checks that `course.html` keeps the required document metadata, that local `href`/`src` targets resolve inside the repository, and that the `COURSE_DATA` object has valid pages, sidebar links, quizzes, flashcards, Q&A entries, and checklist items. GitHub Actions runs the same check on pull requests to `master`.
 
 ---
 
